@@ -1,0 +1,17 @@
+{
+  "name": "ro-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "convert": "node convertToCsv.js",
+    "summarize": "node summarizeCuentaTotals.js",
+    "chart": "node generateCuentasTotales.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}
