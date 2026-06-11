@@ -122,6 +122,20 @@ h1 {
 	color: var(--text);
 }
 
+.status-chip,
+.status-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px 12px;
+	border-radius: 999px;
+	background: rgba(15, 118, 110, 0.12);
+	color: var(--accent);
+	font-size: 0.82rem;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
 .nav-link.is-active {
 	background: var(--accent);
 	color: #fff;
@@ -240,6 +254,12 @@ thead th {
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	color: var(--muted);
+}
+
+.empty-cell {
+	text-align: center;
+	color: var(--muted);
+	padding: 24px 12px;
 }
 
 .form-grid {

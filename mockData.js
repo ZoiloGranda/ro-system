@@ -1,3 +1,8 @@
+const path = require('path');
+const XLSX = require('xlsx');
+
+const workbookPath = path.join(__dirname, 'files', 'MAYO.xlsx');
+
 const transactionSeed = [
 	{
 		id: 'txn-001',
@@ -212,6 +217,127 @@ const normalizeCuenta = (value) => String(value ?? '').trim().toUpperCase();
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+const cleanCellText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
+
+const readSheetRows = (sheetName) => {
+	try {
+		const workbook = XLSX.readFile(workbookPath);
+		const sheet = workbook.Sheets[sheetName];
+
+		if (!sheet) {
+			return [];
+		}
+
+		return XLSX.utils.sheet_to_json(sheet, {
+			header: 1,
+			blankrows: false,
+			defval: '',
+		});
+	} catch (error) {
+		return [];
+	}
+};
+
+const getGroupLabel = (headerRow, columnIndex) => {
+	for (let index = columnIndex; index >= 0; index -= 1) {
+		const label = cleanCellText(headerRow[index]);
+		if (label) {
+			return label;
+		}
+	}
+
+	return 'X PAGAR';
+};
+
+const formatSheetReference = (rowIndex, columnIndex) => {
+	const columnLabel = XLSX.utils.encode_col(columnIndex);
+	return `X PAGAR ${columnLabel}${rowIndex + 1}`;
+};
+
+const numericAmount = (value) => {
+	const amount = Number(value);
+	return Number.isFinite(amount) ? amount : null;
+};
+
+const getPendingOutgoingTransactions = () => {
+	const rows = readSheetRows('X PAGAR');
+	const headerRow = rows[0] || [];
+	const transactions = [];
+	const seenReferences = new Set();
+
+	const pushRecord = ({ rowIndex, columnIndex, sourceAccount, beneficiary, amount, reason }) => {
+		const reference = formatSheetReference(rowIndex, columnIndex);
+		if (seenReferences.has(reference)) {
+			return;
+		}
+
+		seenReferences.add(reference);
+		transactions.push({
+			id: `pending-${rowIndex + 1}-${columnIndex + 1}`,
+			reference,
+			sourceAccount,
+			beneficiary,
+			amount: Math.abs(amount),
+			reason,
+			sheet: 'X PAGAR',
+			status: 'Pendiente de verificacion',
+		});
+	};
+
+	rows.forEach((row, rowIndex) => {
+		row.forEach((cell, columnIndex) => {
+			const text = cleanCellText(cell);
+			if (!/transferencia/i.test(text)) {
+				return;
+			}
+
+			const amount = numericAmount(row[columnIndex + 1]);
+			if (amount === null) {
+				return;
+			}
+
+			pushRecord({
+				rowIndex,
+				columnIndex,
+				sourceAccount: getGroupLabel(headerRow, columnIndex),
+				beneficiary: text,
+				amount,
+				reason: 'Transferencia saliente detectada en la hoja operativa',
+			});
+		});
+	});
+
+	rows.forEach((row, rowIndex) => {
+		row.forEach((cell, columnIndex) => {
+			const note = cleanCellText(cell);
+			if (!/colocado en pendiente/i.test(note)) {
+				return;
+			}
+
+			for (let lookupIndex = columnIndex + 1; lookupIndex < row.length - 1; lookupIndex += 1) {
+				const beneficiary = cleanCellText(row[lookupIndex]);
+				const amount = numericAmount(row[lookupIndex + 1]);
+
+				if (!beneficiary || amount === null || amount >= 0) {
+					continue;
+				}
+
+				pushRecord({
+					rowIndex,
+					columnIndex: lookupIndex,
+					sourceAccount: getGroupLabel(headerRow, lookupIndex),
+					beneficiary,
+					amount,
+					reason: note,
+				});
+				break;
+			}
+		});
+	});
+
+	return transactions.sort((left, right) => left.reference.localeCompare(right.reference));
+};
+
 const totalGeneralForTransaction = (transaction) => numericFields.reduce((sum, field) => {
 	return sum + Number(transaction[field] || 0);
 }, 0);
@@ -367,5 +493,6 @@ module.exports = {
 	getCuentaSummary: () => clone(getCuentaSummary()),
 	getOverview: () => clone(getOverview()),
 	getMetadata: () => clone(getMetadata()),
+	getPendingOutgoingTransactions: () => clone(getPendingOutgoingTransactions()),
 	addTransaction,
 };

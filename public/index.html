@@ -28,6 +28,7 @@
 		<nav class="section-nav" aria-label="Principal">
 			<button class="nav-link is-active" type="button" data-nav-target="overview">Resumen</button>
 			<button class="nav-link" type="button" data-nav-target="transactions">Transacciones</button>
+			<button class="nav-link" type="button" data-nav-target="pending-outgoing">Salientes No Verificadas</button>
 			<button class="nav-link" type="button" data-nav-target="entry">Nuevo registro</button>
 		</nav>
 
@@ -154,6 +155,34 @@
 						</div>
 					</div>
 					<div id="leaderboard" class="leaderboard"></div>
+				</section>
+			</section>
+
+			<section class="panel-stack" data-view="pending-outgoing">
+				<section class="panel">
+					<div class="panel-header">
+						<div>
+							<h2>Salientes no verificadas</h2>
+							<p>Transferencias salientes detectadas en la hoja X PAGAR que requieren confirmacion manual.</p>
+						</div>
+						<span class="status-chip">Revision manual</span>
+					</div>
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Referencia</th>
+									<th>Origen</th>
+									<th>Beneficiario o concepto</th>
+									<th>Monto</th>
+									<th>Senal</th>
+									<th>Hoja</th>
+									<th>Estado</th>
+								</tr>
+							</thead>
+							<tbody id="pendingOutgoingTableBody"></tbody>
+						</table>
+					</div>
 				</section>
 			</section>
 		</main>

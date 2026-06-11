@@ -5,6 +5,7 @@ const currencyFormatter = new Intl.NumberFormat('es-VE', {
 
 const state = {
 	transactions: [],
+	pendingOutgoing: [],
 	metadata: { cuentas: [], paymentMethods: [] },
 	overview: null,
 	summary: [],
@@ -14,6 +15,7 @@ const state = {
 const elements = {
 	kpiGrid: document.getElementById('kpiGrid'),
 	transactionsTableBody: document.getElementById('transactionsTableBody'),
+	pendingOutgoingTableBody: document.getElementById('pendingOutgoingTableBody'),
 	accountFilter: document.getElementById('accountFilter'),
 	methodFilter: document.getElementById('methodFilter'),
 	searchInput: document.getElementById('searchInput'),
@@ -105,6 +107,29 @@ const renderTransactions = () => {
 			<td>${currencyFormatter.format(transaction.efectivo)}</td>
 			<td>${currencyFormatter.format(transaction.entregaPendiente)}</td>
 			<td>${currencyFormatter.format(transaction.totalGeneral)}</td>
+		</tr>
+	`).join('');
+};
+
+const renderPendingOutgoing = () => {
+	if (!state.pendingOutgoing.length) {
+		elements.pendingOutgoingTableBody.innerHTML = `
+			<tr>
+				<td colspan="7" class="empty-cell">No se detectaron salientes pendientes en la hoja X PAGAR.</td>
+			</tr>
+		`;
+		return;
+	}
+
+	elements.pendingOutgoingTableBody.innerHTML = state.pendingOutgoing.map((transaction) => `
+		<tr>
+			<td>${transaction.reference}</td>
+			<td>${transaction.sourceAccount}</td>
+			<td>${transaction.beneficiary}</td>
+			<td>${currencyFormatter.format(transaction.amount)}</td>
+			<td>${transaction.reason}</td>
+			<td>${transaction.sheet}</td>
+			<td><span class="status-pill">${transaction.status}</span></td>
 		</tr>
 	`).join('');
 };
@@ -203,19 +228,22 @@ const renderAll = () => {
 	renderKpis();
 	renderFilters();
 	renderTransactions();
+	renderPendingOutgoing();
 	renderCharts();
 	renderLeaderboard();
 };
 
 const loadAllData = async () => {
-	const [transactions, metadata, overview, summary] = await Promise.all([
+	const [transactions, pendingOutgoing, metadata, overview, summary] = await Promise.all([
 		fetchJson('/api/transactions'),
+		fetchJson('/api/transactions/pending-outgoing'),
 		fetchJson('/api/filters/metadata'),
 		fetchJson('/api/reports/overview'),
 		fetchJson('/api/summary/cuentas'),
 	]);
 
 	state.transactions = transactions;
+	state.pendingOutgoing = pendingOutgoing;
 	state.metadata = metadata;
 	state.overview = overview;
 	state.summary = summary;
