@@ -1,6 +1,6 @@
 # ro-system
 
-Small Node.js utility project for cleaning an Excel sheet, generating grouped `CUENTA` totals, building an HTML chart, and serving that chart locally.
+Node.js workspace for cleaning the `ZELLE` Excel sheet, generating grouped `CUENTA` totals, and now serving a JavaScript dashboard prototype backed by mock API data.
 
 ## Requirements
 
@@ -16,7 +16,41 @@ Small Node.js utility project for cleaning an Excel sheet, generating grouped `C
 npm install
 ```
 
-## Project Workflow
+## Prototype Dashboard
+
+`npm start` now runs a Node.js backend that serves a browser-based JavaScript dashboard from `public/` and exposes mock JSON endpoints for the demo UI.
+
+Default URL:
+
+```text
+http://127.0.0.1:3000
+```
+
+If port `3000` is already in use:
+
+```powershell
+$env:PORT=3001
+npm start
+```
+
+Prototype features:
+
+- Overview dashboard with KPI cards and charts
+- Transaction explorer with search and filters
+- New-entry form aligned to the `ZELLE` sheet fields
+- In-memory mock submission flow that refreshes reports instantly
+
+Prototype API routes:
+
+- `GET /api/transactions`
+- `GET /api/summary/cuentas`
+- `GET /api/reports/overview`
+- `GET /api/filters/metadata`
+- `POST /api/transactions`
+
+The prototype uses seeded mock data shaped from the current spreadsheet outputs. It is intended for presentation use, not production persistence.
+
+## Spreadsheet Utility Workflow
 
 The default workflow uses the files in the `files/` directory:
 
@@ -97,13 +131,13 @@ Example:
 node generateCuentasTotales.js files/cuenta-totals.csv files/cuenta-totals-chart.html
 ```
 
-### 4. Serve the generated chart locally
+### 4. Serve the dashboard locally
 
 ```bash
 npm start
 ```
 
-This starts a small HTTP server at:
+This starts the Node.js prototype server at:
 
 ```text
 http://127.0.0.1:3000
@@ -137,3 +171,4 @@ Then open `http://127.0.0.1:3000` in your browser.
 - The conversion step looks for a header row that matches the expected sheet structure.
 - The summary step groups rows by normalized `CUENTA` values, so name casing and extra spaces do not create separate groups.
 - The chart uses the `TOTAL GENERAL` column from the summary output.
+- The dashboard prototype is served from `public/` and uses mock API responses generated in `server.js` and `mockData.js`.

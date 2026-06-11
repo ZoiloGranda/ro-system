@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>RO System Prototype</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="/styles.css" />
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="/app.js" defer></script>
+</head>
+<body>
+	<div class="page-shell">
+		<header class="hero">
+			<div>
+				<p class="eyebrow">Treasury Operations Prototype</p>
+				<h1>ZELLE Intake and Reporting Dashboard</h1>
+				<p class="hero-copy">Demo-ready UI prototype backed by Node.js mock APIs seeded from the current spreadsheet workflow.</p>
+			</div>
+			<div class="hero-actions">
+				<button class="ghost-button" type="button" data-nav-target="transactions">Review transactions</button>
+				<button class="primary-button" type="button" data-nav-target="entry">Add new record</button>
+			</div>
+		</header>
+
+		<nav class="section-nav" aria-label="Primary">
+			<button class="nav-link is-active" type="button" data-nav-target="overview">Overview</button>
+			<button class="nav-link" type="button" data-nav-target="transactions">Transactions</button>
+			<button class="nav-link" type="button" data-nav-target="entry">New Entry</button>
+		</nav>
+
+		<main>
+			<section class="panel-stack is-visible" data-view="overview">
+				<section class="kpi-grid" id="kpiGrid"></section>
+				<section class="chart-grid">
+					<article class="panel chart-panel">
+						<div class="panel-header">
+							<div>
+								<h2>Top cuentas</h2>
+								<p>Highest combined activity by account.</p>
+							</div>
+						</div>
+						<div class="chart-shell">
+							<canvas id="topAccountsChart"></canvas>
+						</div>
+					</article>
+					<article class="panel chart-panel">
+						<div class="panel-header">
+							<div>
+								<h2>Payment mix</h2>
+								<p>Distribution across operational methods.</p>
+							</div>
+						</div>
+						<div class="chart-shell">
+							<canvas id="paymentMixChart"></canvas>
+						</div>
+					</article>
+				</section>
+				<section class="panel chart-panel wide-panel">
+					<div class="panel-header">
+						<div>
+							<h2>Daily trend</h2>
+							<p>Prototype daily volume trend derived from the imported sheet.</p>
+						</div>
+					</div>
+					<div class="chart-shell chart-shell--short">
+						<canvas id="dailyTrendChart"></canvas>
+					</div>
+				</section>
+			</section>
+
+			<section class="panel-stack" data-view="transactions">
+				<section class="panel filters-panel">
+					<div class="panel-header">
+						<div>
+							<h2>Transaction explorer</h2>
+							<p>Search and filter the imported ZELLE operations.</p>
+						</div>
+					</div>
+					<div class="filter-row">
+						<label>
+							<span>Search</span>
+							<input id="searchInput" type="search" placeholder="Client, sender, or cuenta" />
+						</label>
+						<label>
+							<span>Cuenta</span>
+							<select id="accountFilter"></select>
+						</label>
+						<label>
+							<span>Method</span>
+							<select id="methodFilter"></select>
+						</label>
+					</div>
+				</section>
+				<section class="panel">
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Fecha</th>
+									<th>Cliente</th>
+									<th>Envia</th>
+									<th>Cuenta</th>
+									<th>Metodo</th>
+									<th>Zelle</th>
+									<th>Efectivo</th>
+									<th>Entrega pendiente</th>
+									<th>Total</th>
+								</tr>
+							</thead>
+							<tbody id="transactionsTableBody"></tbody>
+						</table>
+					</div>
+				</section>
+			</section>
+
+			<section class="panel-stack" data-view="entry">
+				<section class="panel form-panel">
+					<div class="panel-header">
+						<div>
+							<h2>New transaction</h2>
+							<p>Guided prototype flow aligned to the spreadsheet fields.</p>
+						</div>
+					</div>
+					<form id="entryForm" class="entry-form">
+						<div class="form-grid">
+							<label><span>Fecha</span><input name="fecha" required placeholder="12" /></label>
+							<label><span>Cliente</span><input name="cliente" required placeholder="Client name" /></label>
+							<label><span>Envia</span><input name="envia" required placeholder="Sender name" /></label>
+							<label><span>Cuenta</span><input name="cuenta" required placeholder="Account owner" /></label>
+							<label><span>Metodo</span><input name="cliente2" required placeholder="ZELLE / EFECTIVO" /></label>
+							<label><span>Zelle</span><input name="zelle" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Efectivo</span><input name="efectivo" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Bolivares compras</span><input name="bolivaresCompras" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Otros metodos</span><input name="otrosMetodos" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Comisiones terceros</span><input name="comisionesPorTerceros" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Ingresos comisiones en bolivares</span><input name="ingresosPorComisionesEnBolivares" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Entrega pendiente</span><input name="entregaPendiente" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Bolivares venta</span><input name="bolivaresVenta" type="number" step="0.01" placeholder="0.00" /></label>
+						</div>
+						<div class="form-actions">
+							<p id="formStatus" class="form-status">Submitting a record updates the prototype tables and reports in memory.</p>
+							<button class="primary-button" type="submit">Save demo record</button>
+						</div>
+					</form>
+				</section>
+				<section class="panel">
+					<div class="panel-header">
+						<div>
+							<h2>Cuenta leaderboard</h2>
+							<p>Live summary recomputed after every mock submission.</p>
+						</div>
+					</div>
+					<div id="leaderboard" class="leaderboard"></div>
+				</section>
+			</section>
+		</main>
+	</div>
+</body>
+</html>
