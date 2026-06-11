@@ -70,6 +70,20 @@ const formatAmount = (value, emptyLabel = '-') => {
 	return Number.isFinite(amount) ? currencyFormatter.format(amount) : emptyLabel;
 };
 
+const formatAiValidationDate = (value) => {
+	const text = String(value ?? '').trim();
+
+	if (!text) {
+		return '-';
+	}
+
+	if (/^\d{1,2}$/.test(text)) {
+		return `${text.padStart(2, '0')}/05/2025`;
+	}
+
+	return text;
+};
+
 const statusModifierClass = (status) => {
 	const normalized = String(status || '').toLowerCase();
 
@@ -148,7 +162,7 @@ const renderAiValidation = () => {
 		elements.aiValidationSummary.innerHTML = '';
 		elements.aiValidationTableBody.innerHTML = `
 			<tr>
-				<td colspan="9" class="empty-cell">No hay registros de validacion IA disponibles.</td>
+				<td colspan="8" class="empty-cell">No hay registros de validacion IA disponibles.</td>
 			</tr>
 		`;
 		return;
@@ -166,7 +180,7 @@ const renderAiValidation = () => {
 		{ label: 'Error', value: counters.Error },
 		{ label: 'Warning', value: counters.Warning },
 	].map((item) => `
-		<article class="kpi-card">
+		<article class="kpi-card ai-summary-card">
 			<p>${item.label}</p>
 			<strong>${item.value}</strong>
 		</article>
@@ -174,18 +188,17 @@ const renderAiValidation = () => {
 
 	elements.aiValidationTableBody.innerHTML = state.aiValidations.map((transaction) => `
 		<tr>
-			<td>${transaction.fecha || '-'}</td>
+			<td class="ai-validation-date">${formatAiValidationDate(transaction.fecha)}</td>
 			<td>
 				<strong>${transaction.cliente}</strong>
 				<div class="table-meta">${transaction.reference}</div>
 			</td>
 			<td>${transaction.cuenta}</td>
-			<td>${transaction.reportChannel}</td>
+			<td class="ai-validation-channel">${transaction.reportChannel}</td>
 			<td>${formatAmount(transaction.reportedAmount)}</td>
 			<td>${formatAmount(transaction.bankAmount, 'Sin coincidencia')}</td>
-			<td>${formatAmount(transaction.humanAmount)}</td>
-			<td><span class="status-pill ${statusModifierClass(transaction.status)}">${transaction.status}</span></td>
-			<td>${transaction.reason}</td>
+			<td class="ai-validation-status"><span class="status-pill ${statusModifierClass(transaction.status)}">${transaction.status}</span></td>
+			<td class="ai-validation-reason">${transaction.reason}</td>
 		</tr>
 	`).join('');
 };
