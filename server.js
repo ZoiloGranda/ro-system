@@ -7,6 +7,7 @@ const {
 	getCuentaSummary,
 	getOverview,
 	getMetadata,
+	getAiValidatedTransactions,
 	getPendingIncomingTransactions,
 	getPendingOutgoingTransactions,
 	addTransaction,
@@ -102,6 +103,11 @@ const server = http.createServer((request, response) => {
 
 	if (request.method === 'GET' && url.pathname === '/api/transactions/pending-incoming') {
 		sendJson(response, 200, { data: getPendingIncomingTransactions() });
+		return;
+	}
+
+	if (request.method === 'GET' && url.pathname === '/api/transactions/ai-validation') {
+		sendJson(response, 200, { data: getAiValidatedTransactions() });
 		return;
 	}
 

@@ -5,6 +5,7 @@ const currencyFormatter = new Intl.NumberFormat('es-VE', {
 
 const state = {
 	transactions: [],
+	aiValidations: [],
 	pendingIncoming: [],
 	pendingOutgoing: [],
 	metadata: { cuentas: [], paymentMethods: [] },
@@ -16,6 +17,8 @@ const state = {
 const elements = {
 	kpiGrid: document.getElementById('kpiGrid'),
 	transactionsTableBody: document.getElementById('transactionsTableBody'),
+	aiValidationTableBody: document.getElementById('aiValidationTableBody'),
+	aiValidationSummary: document.getElementById('aiValidationSummary'),
 	pendingIncomingTableBody: document.getElementById('pendingIncomingTableBody'),
 	pendingOutgoingTableBody: document.getElementById('pendingOutgoingTableBody'),
 	accountFilter: document.getElementById('accountFilter'),
@@ -56,6 +59,33 @@ const formatValue = (value, type) => {
 	}
 
 	return String(value || 0);
+};
+
+const formatAmount = (value, emptyLabel = '-') => {
+	if (value === null || value === undefined || value === '') {
+		return emptyLabel;
+	}
+
+	const amount = Number(value);
+	return Number.isFinite(amount) ? currencyFormatter.format(amount) : emptyLabel;
+};
+
+const statusModifierClass = (status) => {
+	const normalized = String(status || '').toLowerCase();
+
+	if (normalized === 'validado') {
+		return 'status-pill--validado';
+	}
+
+	if (normalized === 'error') {
+		return 'status-pill--error';
+	}
+
+	if (normalized === 'warning') {
+		return 'status-pill--warning';
+	}
+
+	return '';
 };
 
 const renderKpis = () => {
@@ -109,6 +139,53 @@ const renderTransactions = () => {
 			<td>${currencyFormatter.format(transaction.efectivo)}</td>
 			<td>${currencyFormatter.format(transaction.entregaPendiente)}</td>
 			<td>${currencyFormatter.format(transaction.totalGeneral)}</td>
+		</tr>
+	`).join('');
+};
+
+const renderAiValidation = () => {
+	if (!state.aiValidations.length) {
+		elements.aiValidationSummary.innerHTML = '';
+		elements.aiValidationTableBody.innerHTML = `
+			<tr>
+				<td colspan="9" class="empty-cell">No hay registros de validacion IA disponibles.</td>
+			</tr>
+		`;
+		return;
+	}
+
+	const counters = state.aiValidations.reduce((summary, transaction) => {
+		summary.total += 1;
+		summary[transaction.status] = (summary[transaction.status] || 0) + 1;
+		return summary;
+	}, { total: 0, Validado: 0, Error: 0, Warning: 0 });
+
+	elements.aiValidationSummary.innerHTML = [
+		{ label: 'Revisadas por IA', value: counters.total },
+		{ label: 'Validado', value: counters.Validado },
+		{ label: 'Error', value: counters.Error },
+		{ label: 'Warning', value: counters.Warning },
+	].map((item) => `
+		<article class="kpi-card">
+			<p>${item.label}</p>
+			<strong>${item.value}</strong>
+		</article>
+	`).join('');
+
+	elements.aiValidationTableBody.innerHTML = state.aiValidations.map((transaction) => `
+		<tr>
+			<td>${transaction.fecha || '-'}</td>
+			<td>
+				<strong>${transaction.cliente}</strong>
+				<div class="table-meta">${transaction.reference}</div>
+			</td>
+			<td>${transaction.cuenta}</td>
+			<td>${transaction.reportChannel}</td>
+			<td>${formatAmount(transaction.reportedAmount)}</td>
+			<td>${formatAmount(transaction.bankAmount, 'Sin coincidencia')}</td>
+			<td>${formatAmount(transaction.humanAmount)}</td>
+			<td><span class="status-pill ${statusModifierClass(transaction.status)}">${transaction.status}</span></td>
+			<td>${transaction.reason}</td>
 		</tr>
 	`).join('');
 };
@@ -254,6 +331,7 @@ const renderAll = () => {
 	renderKpis();
 	renderFilters();
 	renderTransactions();
+	renderAiValidation();
 	renderPendingIncoming();
 	renderPendingOutgoing();
 	renderCharts();
@@ -261,8 +339,9 @@ const renderAll = () => {
 };
 
 const loadAllData = async () => {
-	const [transactions, pendingIncoming, pendingOutgoing, metadata, overview, summary] = await Promise.all([
+	const [transactions, aiValidations, pendingIncoming, pendingOutgoing, metadata, overview, summary] = await Promise.all([
 		fetchJson('/api/transactions'),
+		fetchJson('/api/transactions/ai-validation'),
 		fetchJson('/api/transactions/pending-incoming'),
 		fetchJson('/api/transactions/pending-outgoing'),
 		fetchJson('/api/filters/metadata'),
@@ -271,6 +350,7 @@ const loadAllData = async () => {
 	]);
 
 	state.transactions = transactions;
+	state.aiValidations = aiValidations;
 	state.pendingIncoming = pendingIncoming;
 	state.pendingOutgoing = pendingOutgoing;
 	state.metadata = metadata;

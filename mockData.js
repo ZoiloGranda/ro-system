@@ -221,6 +221,10 @@ const cleanCellText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim()
 
 const formatExcelDate = (value) => {
 	if (typeof value === 'number') {
+		if (Number.isInteger(value) && value >= 1 && value <= 31) {
+			return String(value);
+		}
+
 		const parsed = XLSX.SSF.parse_date_code(value);
 		if (parsed) {
 			const day = String(parsed.d).padStart(2, '0');
@@ -270,6 +274,44 @@ const formatSheetReference = (sheetName, rowIndex, columnIndex) => {
 const numericAmount = (value) => {
 	const amount = Number(value);
 	return Number.isFinite(amount) ? amount : null;
+};
+
+const extractWorkbookTransaction = (sheetName, rowIndex, columnMap = {}) => {
+	const rows = readSheetRows(sheetName);
+	const row = rows[rowIndex] || [];
+	const {
+		date = 0,
+		client = 1,
+		amount = 2,
+		efectivo = 3,
+		bolivares = 4,
+		otrosMetodos = 5,
+	} = columnMap;
+	const clientName = cleanCellText(row[client]);
+	const bankAmount = numericAmount(row[amount]);
+
+	if (!clientName || bankAmount === null) {
+		return null;
+	}
+
+	return {
+		sheet: sheetName,
+		reference: formatSheetReference(sheetName, rowIndex, 0),
+		fecha: formatExcelDate(row[date]),
+		cliente: clientName,
+		bankAmount,
+		efectivo: numericAmount(row[efectivo]),
+		bolivares: numericAmount(row[bolivares]),
+		otrosMetodos: numericAmount(row[otrosMetodos]),
+	};
+};
+
+const findWorkbookTransactionsByClient = (sheetName, clientNeedle) => {
+	const needle = cleanCellText(clientNeedle).toLowerCase();
+
+	return readSheetRows(sheetName)
+		.map((_, rowIndex) => extractWorkbookTransaction(sheetName, rowIndex))
+		.filter((transaction) => transaction && transaction.cliente.toLowerCase().includes(needle));
 };
 
 const getPendingOutgoingTransactions = () => {
@@ -412,6 +454,97 @@ const getPendingIncomingTransactions = () => {
 	return transactions
 		.sort((left, right) => right.rawDate - left.rawDate || right.amount - left.amount)
 		.map(({ rawDate, ...transaction }) => transaction);
+};
+
+const getAiValidatedTransactions = () => {
+	const joseMedina = extractWorkbookTransaction('HERNANDO', 8);
+	const joseTavola = extractWorkbookTransaction('X COBRAR', 1, { date: 1, client: 2, amount: 3 });
+	const zoiloGranda = extractWorkbookTransaction('PANAMA', 3);
+	const carlosDavid = extractWorkbookTransaction('X COBRAR', 5, { date: 1, client: 2, amount: 3 });
+	const emiroAlbanil = extractWorkbookTransaction('X COBRAR', 6, { date: 1, client: 2, amount: 3 });
+	const normanMatches = findWorkbookTransactionsByClient('PANAMA', 'Norman Franco');
+	const normanReferences = normanMatches.slice(0, 3).map((transaction) => transaction.reference).join(', ');
+
+	return [
+		joseMedina && {
+			id: 'ai-001',
+			fecha: joseMedina.fecha,
+			cliente: joseMedina.cliente,
+			cuenta: joseMedina.sheet,
+			reference: joseMedina.reference,
+			reportChannel: 'Excel',
+			reportedAmount: joseMedina.bankAmount,
+			bankAmount: joseMedina.bankAmount,
+			humanAmount: joseMedina.bankAmount,
+			status: 'Validado',
+			reason: 'El monto reportado coincide exactamente con el ingreso detectado en MAYO.xlsx.',
+		},
+		joseTavola && {
+			id: 'ai-002',
+			fecha: joseTavola.fecha,
+			cliente: joseTavola.cliente,
+			cuenta: joseTavola.sheet,
+			reference: joseTavola.reference,
+			reportChannel: 'WhatsApp',
+			reportedAmount: joseTavola.bankAmount,
+			bankAmount: joseTavola.bankAmount,
+			humanAmount: joseTavola.bankAmount,
+			status: 'Validado',
+			reason: 'La IA encontro una coincidencia exacta entre el reporte enviado y el movimiento bancario.',
+		},
+		zoiloGranda && {
+			id: 'ai-003',
+			fecha: zoiloGranda.fecha,
+			cliente: zoiloGranda.cliente,
+			cuenta: zoiloGranda.sheet,
+			reference: zoiloGranda.reference,
+			reportChannel: 'Verificacion humana',
+			reportedAmount: zoiloGranda.bankAmount,
+			bankAmount: zoiloGranda.bankAmount,
+			humanAmount: 500,
+			status: 'Error',
+			reason: 'El banco muestra 530, pero la verificacion humana registro 500.',
+		},
+		normanMatches.length && {
+			id: 'ai-004',
+			fecha: normanMatches[0].fecha,
+			cliente: 'Norman Franco',
+			cuenta: 'PANAMA',
+			reference: normanReferences || 'Sin coincidencia exacta',
+			reportChannel: 'WhatsApp',
+			reportedAmount: 150,
+			bankAmount: null,
+			humanAmount: 150,
+			status: 'Error',
+			reason: 'No aparece un abono exacto de 150 en banco; en MAYO.xlsx solo hay movimientos de 100 y 200 para ese remitente.',
+		},
+		carlosDavid && {
+			id: 'ai-005',
+			fecha: carlosDavid.fecha,
+			cliente: carlosDavid.cliente,
+			cuenta: carlosDavid.sheet,
+			reference: carlosDavid.reference,
+			reportChannel: 'Excel',
+			reportedAmount: carlosDavid.bankAmount,
+			bankAmount: carlosDavid.bankAmount,
+			humanAmount: carlosDavid.bankAmount,
+			status: 'Warning',
+			reason: 'Monto inusualmente bajo para el flujo regular; la IA lo marca para revision adicional.',
+		},
+		emiroAlbanil && {
+			id: 'ai-006',
+			fecha: emiroAlbanil.fecha,
+			cliente: emiroAlbanil.cliente,
+			cuenta: emiroAlbanil.sheet,
+			reference: emiroAlbanil.reference,
+			reportChannel: 'Excel',
+			reportedAmount: emiroAlbanil.bankAmount,
+			bankAmount: emiroAlbanil.bankAmount,
+			humanAmount: emiroAlbanil.bankAmount,
+			status: 'Warning',
+			reason: 'Monto inusualmente alto frente al patron diario, aunque el registro existe en banco.',
+		},
+	].filter(Boolean);
 };
 
 const totalGeneralForTransaction = (transaction) => numericFields.reduce((sum, field) => {
@@ -569,6 +702,7 @@ module.exports = {
 	getCuentaSummary: () => clone(getCuentaSummary()),
 	getOverview: () => clone(getOverview()),
 	getMetadata: () => clone(getMetadata()),
+	getAiValidatedTransactions: () => clone(getAiValidatedTransactions()),
 	getPendingIncomingTransactions: () => clone(getPendingIncomingTransactions()),
 	getPendingOutgoingTransactions: () => clone(getPendingOutgoingTransactions()),
 	addTransaction,

@@ -30,6 +30,7 @@
 			<button class="nav-link" type="button" data-nav-target="transactions">Transacciones</button>
 			<button class="nav-link" type="button" data-nav-target="pending-outgoing">Salientes No Verificadas</button>
 			<button class="nav-link" type="button" data-nav-target="pending-incoming">Entrantes No Verificadas</button>
+			<button class="nav-link" type="button" data-nav-target="ai-validation">Validacion IA</button>
 			<button class="nav-link" type="button" data-nav-target="entry">Nuevo registro</button>
 		</nav>
 
@@ -211,6 +212,37 @@
 								</tr>
 							</thead>
 							<tbody id="pendingIncomingTableBody"></tbody>
+						</table>
+					</div>
+				</section>
+			</section>
+
+			<section class="panel-stack" data-view="ai-validation">
+				<section class="panel">
+					<div class="panel-header">
+						<div>
+							<h2>Validacion IA</h2>
+							<p>Revision automatica de movimientos bancarios contra reportes de WhatsApp, Excel y verificacion humana.</p>
+						</div>
+						<span class="status-chip">Modelo + control humano</span>
+					</div>
+					<div id="aiValidationSummary" class="kpi-grid"></div>
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Fecha</th>
+									<th>Cliente</th>
+									<th>Cuenta</th>
+									<th>Canal</th>
+									<th>Reportado</th>
+									<th>Banco</th>
+									<th>Revision humana</th>
+									<th>Estado</th>
+									<th>Motivo</th>
+								</tr>
+							</thead>
+							<tbody id="aiValidationTableBody"></tbody>
 						</table>
 					</div>
 				</section>
