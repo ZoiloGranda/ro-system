@@ -29,6 +29,7 @@
 			<button class="nav-link is-active" type="button" data-nav-target="overview">Resumen</button>
 			<button class="nav-link" type="button" data-nav-target="transactions">Transacciones</button>
 			<button class="nav-link" type="button" data-nav-target="pending-outgoing">Salientes No Verificadas</button>
+			<button class="nav-link" type="button" data-nav-target="pending-incoming">Entrantes No Verificadas</button>
 			<button class="nav-link" type="button" data-nav-target="entry">Nuevo registro</button>
 		</nav>
 
@@ -181,6 +182,35 @@
 								</tr>
 							</thead>
 							<tbody id="pendingOutgoingTableBody"></tbody>
+						</table>
+					</div>
+				</section>
+			</section>
+
+			<section class="panel-stack" data-view="pending-incoming">
+				<section class="panel">
+					<div class="panel-header">
+						<div>
+							<h2>Entrantes no verificadas</h2>
+							<p>Ingresos detectados en la hoja X COBRAR que deben revisarse manualmente antes de darlos por conciliados.</p>
+						</div>
+						<span class="status-chip">Conciliacion manual</span>
+					</div>
+					<div class="table-wrap">
+						<table>
+							<thead>
+								<tr>
+									<th>Fecha</th>
+									<th>Referencia</th>
+									<th>Remitente</th>
+									<th>Cuenta destino</th>
+									<th>Monto</th>
+									<th>Senal</th>
+									<th>Hoja</th>
+									<th>Estado</th>
+								</tr>
+							</thead>
+							<tbody id="pendingIncomingTableBody"></tbody>
 						</table>
 					</div>
 				</section>

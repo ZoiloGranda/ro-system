@@ -5,6 +5,7 @@ const currencyFormatter = new Intl.NumberFormat('es-VE', {
 
 const state = {
 	transactions: [],
+	pendingIncoming: [],
 	pendingOutgoing: [],
 	metadata: { cuentas: [], paymentMethods: [] },
 	overview: null,
@@ -15,6 +16,7 @@ const state = {
 const elements = {
 	kpiGrid: document.getElementById('kpiGrid'),
 	transactionsTableBody: document.getElementById('transactionsTableBody'),
+	pendingIncomingTableBody: document.getElementById('pendingIncomingTableBody'),
 	pendingOutgoingTableBody: document.getElementById('pendingOutgoingTableBody'),
 	accountFilter: document.getElementById('accountFilter'),
 	methodFilter: document.getElementById('methodFilter'),
@@ -134,6 +136,30 @@ const renderPendingOutgoing = () => {
 	`).join('');
 };
 
+const renderPendingIncoming = () => {
+	if (!state.pendingIncoming.length) {
+		elements.pendingIncomingTableBody.innerHTML = `
+			<tr>
+				<td colspan="8" class="empty-cell">No se detectaron entrantes pendientes en la hoja X COBRAR.</td>
+			</tr>
+		`;
+		return;
+	}
+
+	elements.pendingIncomingTableBody.innerHTML = state.pendingIncoming.map((transaction) => `
+		<tr>
+			<td>${transaction.date || '-'}</td>
+			<td>${transaction.reference}</td>
+			<td>${transaction.sender}</td>
+			<td>${transaction.destinationAccount}</td>
+			<td>${currencyFormatter.format(transaction.amount)}</td>
+			<td>${transaction.reason}</td>
+			<td>${transaction.sheet}</td>
+			<td><span class="status-pill">${transaction.status}</span></td>
+		</tr>
+	`).join('');
+};
+
 const destroyChart = (name) => {
 	if (state.charts[name]) {
 		state.charts[name].destroy();
@@ -228,14 +254,16 @@ const renderAll = () => {
 	renderKpis();
 	renderFilters();
 	renderTransactions();
+	renderPendingIncoming();
 	renderPendingOutgoing();
 	renderCharts();
 	renderLeaderboard();
 };
 
 const loadAllData = async () => {
-	const [transactions, pendingOutgoing, metadata, overview, summary] = await Promise.all([
+	const [transactions, pendingIncoming, pendingOutgoing, metadata, overview, summary] = await Promise.all([
 		fetchJson('/api/transactions'),
+		fetchJson('/api/transactions/pending-incoming'),
 		fetchJson('/api/transactions/pending-outgoing'),
 		fetchJson('/api/filters/metadata'),
 		fetchJson('/api/reports/overview'),
@@ -243,6 +271,7 @@ const loadAllData = async () => {
 	]);
 
 	state.transactions = transactions;
+	state.pendingIncoming = pendingIncoming;
 	state.pendingOutgoing = pendingOutgoing;
 	state.metadata = metadata;
 	state.overview = overview;

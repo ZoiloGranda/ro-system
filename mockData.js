@@ -219,6 +219,19 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const cleanCellText = (value) => String(value ?? '').replace(/\s+/g, ' ').trim();
 
+const formatExcelDate = (value) => {
+	if (typeof value === 'number') {
+		const parsed = XLSX.SSF.parse_date_code(value);
+		if (parsed) {
+			const day = String(parsed.d).padStart(2, '0');
+			const month = String(parsed.m).padStart(2, '0');
+			return `${day}/${month}/${parsed.y}`;
+		}
+	}
+
+	return cleanCellText(value);
+};
+
 const readSheetRows = (sheetName) => {
 	try {
 		const workbook = XLSX.readFile(workbookPath);
@@ -249,9 +262,9 @@ const getGroupLabel = (headerRow, columnIndex) => {
 	return 'X PAGAR';
 };
 
-const formatSheetReference = (rowIndex, columnIndex) => {
+const formatSheetReference = (sheetName, rowIndex, columnIndex) => {
 	const columnLabel = XLSX.utils.encode_col(columnIndex);
-	return `X PAGAR ${columnLabel}${rowIndex + 1}`;
+	return `${sheetName} ${columnLabel}${rowIndex + 1}`;
 };
 
 const numericAmount = (value) => {
@@ -266,7 +279,7 @@ const getPendingOutgoingTransactions = () => {
 	const seenReferences = new Set();
 
 	const pushRecord = ({ rowIndex, columnIndex, sourceAccount, beneficiary, amount, reason }) => {
-		const reference = formatSheetReference(rowIndex, columnIndex);
+		const reference = formatSheetReference('X PAGAR', rowIndex, columnIndex);
 		if (seenReferences.has(reference)) {
 			return;
 		}
@@ -336,6 +349,69 @@ const getPendingOutgoingTransactions = () => {
 	});
 
 	return transactions.sort((left, right) => left.reference.localeCompare(right.reference));
+};
+
+const getPendingIncomingTransactions = () => {
+	const rows = readSheetRows('X COBRAR');
+	const primaryHeaderRow = rows[0] || [];
+	const secondaryHeaderRow = rows[2] || [];
+	const transactions = [];
+	const seenReferences = new Set();
+	const excludedNames = /^(saldo inicial|efectivo|descontado)$/i;
+
+	const groups = [];
+	const maxColumnCount = Math.max(primaryHeaderRow.length, secondaryHeaderRow.length);
+
+	for (let columnIndex = 0; columnIndex < maxColumnCount; columnIndex += 1) {
+		const primaryHeader = cleanCellText(primaryHeaderRow[columnIndex]);
+		const secondaryHeader = cleanCellText(secondaryHeaderRow[columnIndex]);
+		const isDateColumn = primaryHeader.toUpperCase() === 'FECHA' || secondaryHeader.toUpperCase() === 'FECHA';
+
+		if (!isDateColumn) {
+			continue;
+		}
+
+		groups.push({
+			columnIndex,
+			dataStartRow: primaryHeader.toUpperCase() === 'FECHA' ? 1 : 3,
+			accountLabel: (() => {
+				const label = getGroupLabel(primaryHeaderRow, columnIndex);
+				return label === 'FECHA' ? 'X COBRAR principal' : label;
+			})(),
+		});
+	}
+
+	for (const group of groups) {
+		for (let rowIndex = group.dataStartRow; rowIndex < rows.length; rowIndex += 1) {
+			const row = rows[rowIndex] || [];
+			const rawDate = row[group.columnIndex];
+			const sender = cleanCellText(row[group.columnIndex + 1]);
+			const amount = numericAmount(row[group.columnIndex + 2]);
+			const reference = formatSheetReference('X COBRAR', rowIndex, group.columnIndex);
+
+			if (!sender || amount === null || amount <= 0 || excludedNames.test(sender) || seenReferences.has(reference)) {
+				continue;
+			}
+
+			seenReferences.add(reference);
+			transactions.push({
+				id: `incoming-${rowIndex + 1}-${group.columnIndex + 1}`,
+				reference,
+				date: formatExcelDate(rawDate),
+				rawDate: typeof rawDate === 'number' ? rawDate : Number.NEGATIVE_INFINITY,
+				sender,
+				destinationAccount: group.accountLabel,
+				amount,
+				reason: 'Pendiente por conciliacion',
+				sheet: 'X COBRAR',
+				status: 'Pendiente de validacion',
+			});
+		}
+	}
+
+	return transactions
+		.sort((left, right) => right.rawDate - left.rawDate || right.amount - left.amount)
+		.map(({ rawDate, ...transaction }) => transaction);
 };
 
 const totalGeneralForTransaction = (transaction) => numericFields.reduce((sum, field) => {
@@ -493,6 +569,7 @@ module.exports = {
 	getCuentaSummary: () => clone(getCuentaSummary()),
 	getOverview: () => clone(getOverview()),
 	getMetadata: () => clone(getMetadata()),
+	getPendingIncomingTransactions: () => clone(getPendingIncomingTransactions()),
 	getPendingOutgoingTransactions: () => clone(getPendingOutgoingTransactions()),
 	addTransaction,
 };

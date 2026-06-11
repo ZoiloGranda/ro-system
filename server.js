@@ -7,6 +7,7 @@ const {
 	getCuentaSummary,
 	getOverview,
 	getMetadata,
+	getPendingIncomingTransactions,
 	getPendingOutgoingTransactions,
 	addTransaction,
 } = require('./mockData');
@@ -96,6 +97,11 @@ const server = http.createServer((request, response) => {
 
 	if (request.method === 'GET' && url.pathname === '/api/transactions/pending-outgoing') {
 		sendJson(response, 200, { data: getPendingOutgoingTransactions() });
+		return;
+	}
+
+	if (request.method === 'GET' && url.pathname === '/api/transactions/pending-incoming') {
+		sendJson(response, 200, { data: getPendingIncomingTransactions() });
 		return;
 	}
 
