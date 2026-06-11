@@ -1,4 +1,4 @@
-const currencyFormatter = new Intl.NumberFormat('en-US', {
+const currencyFormatter = new Intl.NumberFormat('es-VE', {
 	minimumFractionDigits: 2,
 	maximumFractionDigits: 2,
 });
@@ -25,11 +25,11 @@ const elements = {
 };
 
 const kpiConfig = [
-	{ key: 'transactionCount', label: 'Transactions', type: 'count' },
-	{ key: 'activeCuentas', label: 'Active cuentas', type: 'count' },
-	{ key: 'totalVolume', label: 'Total activity', type: 'currency' },
-	{ key: 'pendingAmount', label: 'Pending delivery', type: 'currency' },
-	{ key: 'commissionIncome', label: 'Commission income', type: 'currency' },
+	{ key: 'transactionCount', label: 'Transacciones', type: 'count' },
+	{ key: 'activeCuentas', label: 'Cuentas activas', type: 'count' },
+	{ key: 'totalVolume', label: 'Actividad total', type: 'currency' },
+	{ key: 'pendingAmount', label: 'Entrega pendiente', type: 'currency' },
+	{ key: 'commissionIncome', label: 'Ingresos por comision', type: 'currency' },
 	{ key: 'bolivaresCompras', label: 'Bolivares compras', type: 'currency' },
 ];
 
@@ -40,7 +40,7 @@ const fetchJson = async (url, options) => {
 	const payload = await response.json().catch(() => ({}));
 
 	if (!response.ok) {
-		throw new Error(payload.error || payload.message || 'Request failed');
+		throw new Error(payload.error || payload.message || 'La solicitud fallo');
 	}
 
 	return payload.data;
@@ -68,11 +68,11 @@ const renderKpis = () => {
 };
 
 const renderFilters = () => {
-	elements.accountFilter.innerHTML = ['<option value="">All cuentas</option>']
+	elements.accountFilter.innerHTML = ['<option value="">Todas las cuentas</option>']
 		.concat(state.metadata.cuentas.map((cuenta) => `<option value="${cuenta}">${cuenta}</option>`))
 		.join('');
 
-	elements.methodFilter.innerHTML = ['<option value="">All methods</option>']
+	elements.methodFilter.innerHTML = ['<option value="">Todos los metodos</option>']
 		.concat(state.metadata.paymentMethods.map((method) => `<option value="${method}">${method}</option>`))
 		.join('');
 };
@@ -170,7 +170,7 @@ const renderCharts = () => {
 		data: {
 			labels: state.overview.dailyTrend.map((item) => item.day),
 			datasets: [{
-				label: 'Daily activity',
+				label: 'Actividad diaria',
 				data: state.overview.dailyTrend.map((item) => item.total),
 				borderColor: '#111827',
 				backgroundColor: 'rgba(17, 24, 39, 0.08)',
@@ -192,7 +192,7 @@ const renderLeaderboard = () => {
 			<div>
 				<span class="leaderboard-rank">${index + 1}</span>
 				<strong>${entry.cuenta}</strong>
-				<p>${entry.transactions} transactions</p>
+				<p>${entry.transactions} transacciones</p>
 			</div>
 			<strong>${currencyFormatter.format(entry.totalGeneral)}</strong>
 		</article>
@@ -243,7 +243,7 @@ elements.navButtons.forEach((button) => {
 
 elements.entryForm.addEventListener('submit', async (event) => {
 	event.preventDefault();
-	elements.formStatus.textContent = 'Saving demo record...';
+	elements.formStatus.textContent = 'Guardando registro de demo...';
 
 	const payload = Object.fromEntries(new FormData(elements.entryForm).entries());
 
@@ -254,7 +254,7 @@ elements.entryForm.addEventListener('submit', async (event) => {
 			body: JSON.stringify(payload),
 		});
 		elements.entryForm.reset();
-		elements.formStatus.textContent = 'Record added. Overview, table, and leaderboard refreshed.';
+		elements.formStatus.textContent = 'Registro agregado. Se actualizaron el resumen, la tabla y el ranking.';
 		await loadAllData();
 		switchView('overview');
 	} catch (error) {

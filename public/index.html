@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>RO System Prototype</title>
+	<title>Prototipo RO System</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 	<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet" />
@@ -15,20 +15,20 @@
 	<div class="page-shell">
 		<header class="hero">
 			<div>
-				<p class="eyebrow">Treasury Operations Prototype</p>
-				<h1>ZELLE Intake and Reporting Dashboard</h1>
-				<p class="hero-copy">Demo-ready UI prototype backed by Node.js mock APIs seeded from the current spreadsheet workflow.</p>
+				<p class="eyebrow">Prototipo de Operaciones de Tesoreria</p>
+				<h1>Panel de Registro y Reportes ZELLE</h1>
+				<p class="hero-copy">Prototipo listo para demo, conectado a APIs mock de Node.js basadas en el flujo actual de hojas de calculo.</p>
 			</div>
 			<div class="hero-actions">
-				<button class="ghost-button" type="button" data-nav-target="transactions">Review transactions</button>
-				<button class="primary-button" type="button" data-nav-target="entry">Add new record</button>
+				<button class="ghost-button" type="button" data-nav-target="transactions">Revisar transacciones</button>
+				<button class="primary-button" type="button" data-nav-target="entry">Agregar nuevo registro</button>
 			</div>
 		</header>
 
-		<nav class="section-nav" aria-label="Primary">
-			<button class="nav-link is-active" type="button" data-nav-target="overview">Overview</button>
-			<button class="nav-link" type="button" data-nav-target="transactions">Transactions</button>
-			<button class="nav-link" type="button" data-nav-target="entry">New Entry</button>
+		<nav class="section-nav" aria-label="Principal">
+			<button class="nav-link is-active" type="button" data-nav-target="overview">Resumen</button>
+			<button class="nav-link" type="button" data-nav-target="transactions">Transacciones</button>
+			<button class="nav-link" type="button" data-nav-target="entry">Nuevo registro</button>
 		</nav>
 
 		<main>
@@ -39,7 +39,7 @@
 						<div class="panel-header">
 							<div>
 								<h2>Top cuentas</h2>
-								<p>Highest combined activity by account.</p>
+								<p>Mayor actividad combinada por cuenta.</p>
 							</div>
 						</div>
 						<div class="chart-shell">
@@ -49,8 +49,8 @@
 					<article class="panel chart-panel">
 						<div class="panel-header">
 							<div>
-								<h2>Payment mix</h2>
-								<p>Distribution across operational methods.</p>
+								<h2>Mezcla de pagos</h2>
+								<p>Distribucion entre los metodos operativos.</p>
 							</div>
 						</div>
 						<div class="chart-shell">
@@ -61,8 +61,8 @@
 				<section class="panel chart-panel wide-panel">
 					<div class="panel-header">
 						<div>
-							<h2>Daily trend</h2>
-							<p>Prototype daily volume trend derived from the imported sheet.</p>
+							<h2>Tendencia diaria</h2>
+							<p>Tendencia diaria del volumen segun la hoja importada.</p>
 						</div>
 					</div>
 					<div class="chart-shell chart-shell--short">
@@ -75,21 +75,21 @@
 				<section class="panel filters-panel">
 					<div class="panel-header">
 						<div>
-							<h2>Transaction explorer</h2>
-							<p>Search and filter the imported ZELLE operations.</p>
+							<h2>Explorador de transacciones</h2>
+							<p>Busca y filtra las operaciones ZELLE importadas.</p>
 						</div>
 					</div>
 					<div class="filter-row">
 						<label>
-							<span>Search</span>
-							<input id="searchInput" type="search" placeholder="Client, sender, or cuenta" />
+							<span>Buscar</span>
+							<input id="searchInput" type="search" placeholder="Cliente, remitente o cuenta" />
 						</label>
 						<label>
 							<span>Cuenta</span>
 							<select id="accountFilter"></select>
 						</label>
 						<label>
-							<span>Method</span>
+							<span>Metodo</span>
 							<select id="methodFilter"></select>
 						</label>
 					</div>
@@ -120,37 +120,37 @@
 				<section class="panel form-panel">
 					<div class="panel-header">
 						<div>
-							<h2>New transaction</h2>
-							<p>Guided prototype flow aligned to the spreadsheet fields.</p>
+							<h2>Nueva transaccion</h2>
+							<p>Flujo guiado del prototipo alineado con los campos de la hoja de calculo.</p>
 						</div>
 					</div>
 					<form id="entryForm" class="entry-form">
 						<div class="form-grid">
 							<label><span>Fecha</span><input name="fecha" required placeholder="12" /></label>
-							<label><span>Cliente</span><input name="cliente" required placeholder="Client name" /></label>
-							<label><span>Envia</span><input name="envia" required placeholder="Sender name" /></label>
-							<label><span>Cuenta</span><input name="cuenta" required placeholder="Account owner" /></label>
+							<label><span>Cliente</span><input name="cliente" required placeholder="Nombre del cliente" /></label>
+							<label><span>Envia</span><input name="envia" required placeholder="Nombre del remitente" /></label>
+							<label><span>Cuenta</span><input name="cuenta" required placeholder="Titular de la cuenta" /></label>
 							<label><span>Metodo</span><input name="cliente2" required placeholder="ZELLE / EFECTIVO" /></label>
 							<label><span>Zelle</span><input name="zelle" type="number" step="0.01" placeholder="0.00" /></label>
 							<label><span>Efectivo</span><input name="efectivo" type="number" step="0.01" placeholder="0.00" /></label>
 							<label><span>Bolivares compras</span><input name="bolivaresCompras" type="number" step="0.01" placeholder="0.00" /></label>
 							<label><span>Otros metodos</span><input name="otrosMetodos" type="number" step="0.01" placeholder="0.00" /></label>
-							<label><span>Comisiones terceros</span><input name="comisionesPorTerceros" type="number" step="0.01" placeholder="0.00" /></label>
-							<label><span>Ingresos comisiones en bolivares</span><input name="ingresosPorComisionesEnBolivares" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Comisiones de terceros</span><input name="comisionesPorTerceros" type="number" step="0.01" placeholder="0.00" /></label>
+							<label><span>Ingresos por comisiones en bolivares</span><input name="ingresosPorComisionesEnBolivares" type="number" step="0.01" placeholder="0.00" /></label>
 							<label><span>Entrega pendiente</span><input name="entregaPendiente" type="number" step="0.01" placeholder="0.00" /></label>
 							<label><span>Bolivares venta</span><input name="bolivaresVenta" type="number" step="0.01" placeholder="0.00" /></label>
 						</div>
 						<div class="form-actions">
-							<p id="formStatus" class="form-status">Submitting a record updates the prototype tables and reports in memory.</p>
-							<button class="primary-button" type="submit">Save demo record</button>
+							<p id="formStatus" class="form-status">Al enviar un registro se actualizan en memoria las tablas y reportes del prototipo.</p>
+							<button class="primary-button" type="submit">Guardar registro de demo</button>
 						</div>
 					</form>
 				</section>
 				<section class="panel">
 					<div class="panel-header">
 						<div>
-							<h2>Cuenta leaderboard</h2>
-							<p>Live summary recomputed after every mock submission.</p>
+							<h2>Ranking de cuentas</h2>
+							<p>Resumen en vivo recalculado despues de cada envio de prueba.</p>
 						</div>
 					</div>
 					<div id="leaderboard" class="leaderboard"></div>
